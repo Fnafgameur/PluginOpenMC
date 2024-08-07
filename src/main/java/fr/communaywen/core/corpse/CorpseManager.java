@@ -4,8 +4,10 @@ import dev.lone.itemsadder.api.CustomBlock;
 import fr.communaywen.core.AywenCraftPlugin;
 import fr.communaywen.core.credit.Credit;
 import fr.communaywen.core.credit.Feature;
+import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
@@ -21,8 +23,8 @@ public class CorpseManager implements Listener {
     private Map<CorpseBlock, CorpseMenu> corpses = new HashMap<>();
 
     public void addCorpse(Player p, Inventory inv, Location deathLocation) {
-        CorpseMenu corpseMenu = new CorpseMenu(p, inv);
 
+        CorpseMenu corpseMenu = new CorpseMenu(p, inv);
         CustomBlock block = CustomBlock.getInstance("omc_blocks:grave");
 
         if (block != null) {
@@ -40,28 +42,27 @@ public class CorpseManager implements Listener {
                 }
             }.runTaskLater(AywenCraftPlugin.getInstance(), 20*60*10);
         }
-
     }
 
-    public void open(Location loc, Player p) {
+    public void open(Block clickedBlock, Player p) {
+
         for (CorpseBlock corpseBlock : corpses.keySet()) {
-            Location corpseLocation = corpseBlock.getLocation();
 
-            if (areLocationsClose(loc, corpseLocation, 1.2)) {
-                CorpseMenu corpseMenu = corpses.get(corpseBlock);
+            Block corpseBlockLoc = corpseBlock.getLocation().getBlock();
 
-                if (corpseMenu != null && corpseMenu.isOwner(p)) {
-                    corpseMenu.open(p);
-                }
+            if (!clickedBlock.equals(corpseBlockLoc)) {
+                continue;
             }
+
+            CorpseMenu corpseMenu = corpses.get(corpseBlock);
+
+            if (corpseMenu == null || !corpseMenu.isOwner(p)) {
+                continue;
+            }
+
+            corpseMenu.open(p);
         }
     }
-
-    private boolean areLocationsClose(Location loc1, Location loc2, double tolerance) {
-        return Math.abs(loc1.getX() - loc2.getX()) <= tolerance &&
-                Math.abs(loc1.getZ() - loc2.getZ()) <= tolerance;
-    }
-
 
     public void close(Inventory inv) {
         for (Map.Entry<CorpseBlock, CorpseMenu> entry : corpses.entrySet()) {
@@ -78,6 +79,7 @@ public class CorpseManager implements Listener {
         if (corpseBlock != null) {
             corpseBlock.remove();
         }
+        dropEveryItemsFromCorpse(corpseBlock);
         corpses.remove(corpseBlock);
     }
 
@@ -86,14 +88,17 @@ public class CorpseManager implements Listener {
         while (iterator.hasNext()) {
             CorpseBlock corpseBlock = iterator.next();
 
-            for(ItemStack it : corpses.get(corpseBlock).getInventory()){
-                if(it.getType() == Material.BLACK_STAINED_GLASS_PANE) continue;
-
-                corpseBlock.getLocation().getWorld().dropItemNaturally(corpseBlock.getLocation(), it);
-            }
-
+            dropEveryItemsFromCorpse(corpseBlock);
             corpseBlock.remove();
             iterator.remove();
+        }
+    }
+
+    private void dropEveryItemsFromCorpse(CorpseBlock corpseBlock) {
+        for(ItemStack it : corpses.get(corpseBlock).getInventory()){
+            if(it.getType() == Material.BLACK_STAINED_GLASS_PANE) continue;
+
+            corpseBlock.getLocation().getWorld().dropItemNaturally(corpseBlock.getLocation(), it);
         }
     }
 
@@ -109,7 +114,7 @@ public class CorpseManager implements Listener {
 
     public boolean isCorpseInventoryEmpty(Inventory inv) {
         for (ItemStack item : inv.getContents()) {
-            if (item != null && item.getType() != Material.AIR && !item.getType().equals(Material.BLACK_STAINED_GLASS_PANE)) {
+            if (item != null && !item.getType().isAir() && !item.getType().equals(Material.BLACK_STAINED_GLASS_PANE)) {
                 return false;
             }
         }
@@ -131,6 +136,10 @@ public class CorpseManager implements Listener {
             locations.add(corpseBlock.getLocation());
         }
         return locations;
+    }
+
+    public List<CorpseBlock> getCorpses() {
+        return new ArrayList<>(corpses.keySet());
     }
 
 }
