@@ -80,6 +80,7 @@ public class CorpseListener implements Listener {
                 return;
             }
 
+            e.setCancelled(true);
             corpseManager.open(block, e.getPlayer());
         }
     }
@@ -113,18 +114,37 @@ public class CorpseListener implements Listener {
 
     @EventHandler
     public void onBreak(CustomBlockBreakEvent e) {
+
         ItemStack block = e.getCustomBlockItem();
 
-        if (block.hasItemMeta() && block.getItemMeta().hasDisplayName() && block.getItemMeta().getDisplayName().equalsIgnoreCase("§fgrave")) {
-            e.setCancelled(true);
+        if (!block.hasItemMeta()) {
+            return;
         }
+
+        if (!block.getItemMeta().hasDisplayName()) {
+            return;
+        }
+
+        if (!block.getItemMeta().getDisplayName().equalsIgnoreCase("§fgrave")) {
+            return;
+        }
+
+        /*for (CorpseBlock corpseBlock : corpseManager.getCorpses()) {
+            if (!corpseBlock.getLocation().getBlock().equals(block)) {
+                continue;
+            }
+            corpseManager.remove(corpseBlock);
+        }*/
     }
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent e) {
-        if (corpseManager.isCorpseInventory(e.getInventory())) {
-            corpseManager.close(e.getInventory());
+
+        if (!corpseManager.isCorpseInventory(e.getInventory())) {
+            return;
         }
+
+        corpseManager.close(e.getInventory());
     }
 
     @EventHandler

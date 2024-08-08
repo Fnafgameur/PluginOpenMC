@@ -8,7 +8,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -17,7 +16,7 @@ import java.util.*;
 
 @Feature("Tombe")
 @Credit("Martinouxx")
-public class CorpseManager implements Listener {
+public class CorpseManager {
 
     private Map<CorpseBlock, CorpseMenu> corpses = new HashMap<>();
 
